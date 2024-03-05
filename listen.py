@@ -1,11 +1,14 @@
 import subprocess
 import time
 import smtplib
+import json
 
-watchlist = ['temporary.py' , "temp.py", "whatever.py"]
-email = "opencti@testmail.local"
-password = "roundcubeP@55w0rd"
-to = ["socuser@testmail.local"]
+config = json.loads(open("listen.json","r",encoding="utf-8").read())
+watchlist = config["watchlist"]
+email = config["sender"]
+password = config["senderpw"]
+to = config["reciever"]
+interval = config["interval_seconds"]
 def get_python_process():
    try:
       # Run the shell command to get the list of Python processes
@@ -23,9 +26,11 @@ def get_python_process():
 
 def main():
    initial_processes = watchlist
-
+   print("Checker started")
+   
    while True:
-      time.sleep(5)
+      print(f"running checker in next {interval} seconds")
+	  time.sleep(interval)
 
       current_processes = get_python_process()
       unknown_processes = list(set(current_processes) - set(initial_processes))
@@ -33,20 +38,28 @@ def main():
       missing_processes = list(set(initial_processes) - set(known_processes))
 
       if len(missing_processes) > 0:
-         with smtplib.SMTP_SSL('192.168.191.57', 465) as smtp:
+		 print(f"Connector(s) {missing_processes} is down")
+		 try:
+			with smtplib.SMTP_SSL(config["emailserverip"], 465) as smtp:
 
-            smtp.login(email, password)
+				smtp.login(email, password)
 
-            subject = "Connector Down"
-            body = f"Connector(s) {missing_processes} is down"
+				subject = f"{missing_processes} is down"
+				body = f"Connector(s) {missing_processes} is down"
 
-            msg = "Subject: {}\n\n{}".format(subject, body)
+				msg = "Subject: {}\n\n{}".format(subject, body)
 
-            smtp.sendmail(email, to, msg)
+				smtp.sendmail(email, to, msg)
 
-         print("Connector down")
-         print("Email sent")
+				print("Connector down")
+				print("Email sent")
 
+		 except Exception as e:
+			print(e)
+			print("Email not sent")
+		 else:
+			print("No connectors down..")
+			
 if __name__ == "__main__":
    main()
 
