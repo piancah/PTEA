@@ -1,0 +1,8 @@
+{
+	"watchlist": ["av.py","mitre.py"],
+	"sender": "opencti@opencti.local",
+	"senderpw": "P@ssw0rd!123",
+	"reciever":	"socuser@opencti.local",
+	"emailserverip": "172.17.60.22",
+	"interval_seconds": 300
+}
